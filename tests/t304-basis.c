@@ -15,7 +15,8 @@ int main(int argc, char **argv) {
   Ceed ceed;
 
   CeedInit(argv[1], &ceed);
-  for (CeedInt dim=1; dim<=3; dim++) {
+  // for (CeedInt dim=1; dim<=3; dim++) {
+  for (CeedInt dim=1; dim<=1; dim++) {
     CeedVector X, Xq, U, Uq, Ones, Gtposeones;
     CeedBasis bxl, bug;
     CeedInt P = 8, Q = 10, Pdim = CeedIntPow(P, dim), Qdim = CeedIntPow(Q, dim),
@@ -49,7 +50,9 @@ int main(int argc, char **argv) {
     CeedVectorGetArrayRead(Xq, CEED_MEM_HOST, &xq);
     for (CeedInt i=0; i<Pdim; i++) {
       CeedScalar xx[dim];
-      for (CeedInt d=0; d<dim; d++) xx[d] = xq[d*Pdim + i];
+      for (CeedInt d=0; d<dim; d++) {
+        xx[d] = xq[d*Pdim + i];
+      }
       u[i] = Eval(dim, xx);
     }
     CeedVectorRestoreArrayRead(Xq, &xq);
