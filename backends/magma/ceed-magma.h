@@ -52,9 +52,9 @@ magmablas_dbasis_apply_batched_eval_interp(
     magma_int_t P, magma_int_t Q, 
     magma_int_t dim, magma_int_t ncomp,  
     const double *dT, CeedTransposeMode tmode,
-    const double *dU, magma_int_t ustride, 
-          double *dV, magma_int_t vstride, 
-    magma_int_t batchCount );
+    const double *dU, magma_int_t ustride, magma_int_t u_compstride, 
+          double *dV, magma_int_t vstride, magma_int_t v_compstride, 
+    magma_int_t nelem );
     
 void 
 magmablas_dbasis_apply_batched_eval_grad( 
