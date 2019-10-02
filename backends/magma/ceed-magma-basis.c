@@ -95,13 +95,21 @@ int CeedBasisApply_Magma(CeedBasis basis, CeedInt nelem,
     }
 
     // Loop through components and apply batch over elements
+    #if 1
+    magmablas_dbasis_apply_batched_eval_interp(P, Q, dim, ncomp,
+	   				       impl->dinterp1d, tmode, 
+   					       u, u_elstride, u_compstride, 
+					       v, v_elstride, v_compstride,  
+					       nelem);
+    #else
     for (CeedInt comp_ctr = 0; comp_ctr < ncomp; comp_ctr++){
            magmablas_dbasis_apply_batched_eval_interp(P, Q, dim, ncomp,
 	   				       impl->dinterp1d, tmode, 
-   					       u + u_compstride * comp_ctr, u_elstride, 
-					       v + v_compstride * comp_ctr, v_elstride, 
+   					       u + u_compstride * comp_ctr, u_elstride, 0, 
+					       v + v_compstride * comp_ctr, v_elstride, 0, 
 					       nelem);  
      }
+    #endif
 
   }
   if (emode & CEED_EVAL_GRAD) {
