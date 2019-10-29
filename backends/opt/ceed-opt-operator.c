@@ -423,8 +423,6 @@ static inline int CeedOperatorOutputBasis_Opt(CeedInt e, CeedInt Q,
   return 0;
 }
 
-
-
 // Restore Inputs
 static inline int CeedOperatorRestoreInputs_Opt(CeedInt numinputfields,
     CeedQFunctionField *qfinputfields, CeedOperatorField *opinputfields,
@@ -485,7 +483,8 @@ static int CeedOperatorApply_Opt(CeedOperator op, CeedVector invec,
 
   // Input Evecs and Restriction
   ierr = CeedOperatorSetupInputs_Opt(numinputfields, qfinputfields,
-                                     opinputfields, invec, impl, request); CeedChk(ierr);
+                                     opinputfields, invec, impl, request);
+  CeedChk(ierr);
 
   // Output Lvecs, Evecs, and Qvecs
   for (CeedInt i=0; i<numoutputfields; i++) {
