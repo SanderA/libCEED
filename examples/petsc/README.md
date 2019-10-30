@@ -1,5 +1,9 @@
 ## libCEED + PETSc Examples
 
+These examples are intended for PETSc version 3.12.0 or later. With PETSc prior
+to version 3.12.0, providing the source path to include `cublas_v2.h` will be
+needed to use `petsccuda.h` in order to run these examples on GPU.
+
 ### CEED bakeoff problems - bps
 
 This code solves the CEED bakeoff problems on a structured grid generated and
