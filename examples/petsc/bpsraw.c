@@ -803,17 +803,22 @@ int main(int argc, char **argv) {
     user->VecRestoreArray = VecRestoreArray;
     user->VecRestoreArrayRead = VecRestoreArrayRead;
   } else {
-#ifdef PETSC_HAVE_CUDA
+    #ifdef PETSC_HAVE_CUDA
     user->VecGetArray = VecCUDAGetArray;
     user->VecGetArrayRead = VecCUDAGetArrayRead;
     user->VecRestoreArray = VecCUDARestoreArray;
     user->VecRestoreArrayRead = VecCUDARestoreArrayRead;
-#endif
+    #endif
   }
 
   ierr = MatCreateShell(comm, mnodes[0]*mnodes[1]*mnodes[2]*ncompu,
                         mnodes[0]*mnodes[1]*mnodes[2]*ncompu,
                         PETSC_DECIDE, PETSC_DECIDE, user, &mat); CHKERRQ(ierr);
+  if (user->memtype == CEED_MEM_DEVICE) {
+    #if PETSC_VERSION_GT(3,13,0)
+    ierr = MatShellSetVecType(mat, VECCUDA); CHKERRQ(ierr);
+    #endif
+  }
   if (bpChoice == CEED_BP1 || bpChoice == CEED_BP2) {
     ierr = MatShellSetOperation(mat, MATOP_MULT, (void(*)(void))MatMult_Mass);
     CHKERRQ(ierr);
@@ -821,12 +826,9 @@ int main(int argc, char **argv) {
     ierr = MatShellSetOperation(mat, MATOP_MULT, (void(*)(void))MatMult_Diff);
     CHKERRQ(ierr);
   }
-  ierr = MatCreateVecs(mat, &rhs, NULL); CHKERRQ(ierr);
-  if (user->memtype == CEED_MEM_DEVICE) {
-    ierr = VecSetType(rhs, VECCUDA); CHKERRQ(ierr);
-  }
 
   // Get RHS vector
+  ierr = VecDuplicate(X, &rhs); CHKERRQ(ierr);
   ierr = VecDuplicate(Xloc, &rhsloc); CHKERRQ(ierr);
   ierr = VecZeroEntries(rhsloc); CHKERRQ(ierr);
   ierr = user->VecGetArray(rhsloc, &r); CHKERRQ(ierr);
@@ -851,12 +853,13 @@ int main(int argc, char **argv) {
   {
     PC pc;
     ierr = KSPGetPC(ksp, &pc); CHKERRQ(ierr);
+    ierr = PCSetType(pc, PCNONE); CHKERRQ(ierr);
+    #if PETSC_VERSION_GT(3,13,0)
     if (bpChoice == CEED_BP1 || bpChoice == CEED_BP2) {
       ierr = PCSetType(pc, PCJACOBI); CHKERRQ(ierr);
       ierr = PCJacobiSetType(pc, PC_JACOBI_ROWSUM); CHKERRQ(ierr);
-    } else {
-      ierr = PCSetType(pc, PCNONE); CHKERRQ(ierr);
     }
+    #endif
     ierr = KSPSetType(ksp, KSPCG); CHKERRQ(ierr);
     ierr = KSPSetNormType(ksp, KSP_NORM_NATURAL); CHKERRQ(ierr);
     ierr = KSPSetTolerances(ksp, 1e-10, PETSC_DEFAULT, PETSC_DEFAULT,

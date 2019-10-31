@@ -222,6 +222,11 @@ int main(int argc, char **argv) {
     ierr = PetscMalloc1(1, &userO[i]); CHKERRQ(ierr);
     ierr = MatCreateShell(comm, lsize[i], lsize[i], gsize[i], gsize[i],
                           userO[i], &matO[i]); CHKERRQ(ierr);
+    if (memtyperequested == CEED_MEM_DEVICE) {
+      #if PETSC_VERSION_GT(3,13,0)
+      ierr = MatShellSetVecType(matO[i], VECCUDA); CHKERRQ(ierr);
+      #endif
+    }
     ierr = MatShellSetOperation(matO[i], MATOP_MULT,
                                 (void(*)(void))MatMult_Ceed);
     ierr = MatShellSetOperation(matO[i], MATOP_GET_DIAGONAL,
@@ -234,6 +239,11 @@ int main(int argc, char **argv) {
       ierr = PetscMalloc1(1, &userI[i]); CHKERRQ(ierr);
       ierr = MatCreateShell(comm, lsize[i], lsize[i-1], gsize[i], gsize[i-1],
                             userI[i], &matI[i]); CHKERRQ(ierr);
+      if (memtyperequested == CEED_MEM_DEVICE) {
+        #if PETSC_VERSION_GT(3,13,0)
+        ierr = MatShellSetVecType(matI[i], VECCUDA); CHKERRQ(ierr);
+        #endif
+      }
       ierr = MatShellSetOperation(matI[i], MATOP_MULT,
                                   (void(*)(void))MatMult_Interp);
       CHKERRQ(ierr);
@@ -242,6 +252,11 @@ int main(int argc, char **argv) {
       ierr = PetscMalloc1(1, &userR[i]); CHKERRQ(ierr);
       ierr = MatCreateShell(comm, lsize[i-1], lsize[i], gsize[i-1], gsize[i],
                             userR[i], &matR[i]); CHKERRQ(ierr);
+      if (memtyperequested == CEED_MEM_DEVICE) {
+        #if PETSC_VERSION_GT(3,13,0)
+        ierr = MatShellSetVecType(matR[i], VECCUDA); CHKERRQ(ierr);
+        #endif
+      }
       ierr = MatShellSetOperation(matR[i], MATOP_MULT,
                                   (void(*)(void))MatMult_Restrict);
       CHKERRQ(ierr);
@@ -287,9 +302,9 @@ int main(int argc, char **argv) {
   if (memtyperequested == CEED_MEM_HOST) {
     ierr = VecGetArray(rhsloc, &r); CHKERRQ(ierr);
   } else {
-#ifdef PETSC_HAVE_CUDA
+    #ifdef PETSC_HAVE_CUDA
     ierr = VecCUDAGetArray(rhsloc, &r); CHKERRQ(ierr);
-#endif
+    #endif
   }
   CeedVectorCreate(ceed, xlsize[numlevels-1], &rhsceed);
   CeedVectorSetArray(rhsceed, CEED_MEM_HOST, CEED_USE_POINTER, r);
@@ -318,9 +333,9 @@ int main(int argc, char **argv) {
   if (memtyperequested == CEED_MEM_HOST) {
     ierr = VecRestoreArray(rhsloc, &r); CHKERRQ(ierr);
   } else {
-#ifdef PETSC_HAVE_CUDA
+    #ifdef PETSC_HAVE_CUDA
     ierr = VecCUDARestoreArray(rhsloc, &r); CHKERRQ(ierr);
-#endif
+    #endif
   }
   ierr = VecZeroEntries(rhs); CHKERRQ(ierr);
   ierr = DMLocalToGlobalBegin(dm[numlevels-1], rhsloc, ADD_VALUES, rhs);
@@ -413,12 +428,12 @@ int main(int argc, char **argv) {
       userO[i]->VecRestoreArray = VecRestoreArray;
       userO[i]->VecRestoreArrayRead = VecRestoreArrayRead;
     } else {
-#ifdef PETSC_HAVE_CUDA
+      #ifdef PETSC_HAVE_CUDA
       userO[i]->VecGetArray = VecCUDAGetArray;
       userO[i]->VecGetArrayRead = VecCUDAGetArrayRead;
       userO[i]->VecRestoreArray = VecCUDARestoreArray;
       userO[i]->VecRestoreArrayRead = VecCUDARestoreArrayRead;
-#endif
+      #endif
   }
 
     // Set up diagonal

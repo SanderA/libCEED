@@ -184,6 +184,11 @@ int main(int argc, char **argv) {
   ierr = PetscMalloc1(1, &userO); CHKERRQ(ierr);
   ierr = MatCreateShell(comm, lsize, lsize, gsize, gsize,
                         userO, &matO); CHKERRQ(ierr);
+  if (memtyperequested == CEED_MEM_DEVICE) {
+    #if PETSC_VERSION_GT(3,13,0)
+    ierr = MatShellSetVecType(matO, VECCUDA); CHKERRQ(ierr);
+    #endif
+  }
   ierr = MatShellSetOperation(matO, MATOP_MULT,
                               (void(*)(void))MatMult_Ceed);
   CHKERRQ(ierr);
@@ -223,9 +228,9 @@ int main(int argc, char **argv) {
   if (memtyperequested == CEED_MEM_HOST) {
     ierr = VecGetArray(rhsloc, &r); CHKERRQ(ierr);
   } else {
-#ifdef PETSC_HAVE_CUDA
+    #ifdef PETSC_HAVE_CUDA
     ierr = VecCUDAGetArray(rhsloc, &r); CHKERRQ(ierr);
-#endif
+    #endif
   }
   CeedVectorCreate(ceed, xlsize, &rhsceed);
   CeedVectorSetArray(rhsceed, memtyperequested, CEED_USE_POINTER, r);
@@ -240,9 +245,9 @@ int main(int argc, char **argv) {
   if (memtyperequested == CEED_MEM_HOST) {
     ierr = VecRestoreArray(rhsloc, &r); CHKERRQ(ierr);
   } else {
-#ifdef PETSC_HAVE_CUDA
+    #ifdef PETSC_HAVE_CUDA
     ierr = VecCUDARestoreArray(rhsloc, &r); CHKERRQ(ierr);
-#endif
+    #endif
   }
   ierr = VecZeroEntries(rhs); CHKERRQ(ierr);
   ierr = DMLocalToGlobalBegin(dm, rhsloc, ADD_VALUES, rhs); CHKERRQ(ierr);
@@ -283,24 +288,25 @@ int main(int argc, char **argv) {
     userO->VecRestoreArray = VecRestoreArray;
     userO->VecRestoreArrayRead = VecRestoreArrayRead;
   } else {
-#ifdef PETSC_HAVE_CUDA
+    #ifdef PETSC_HAVE_CUDA
     userO->VecGetArray = VecCUDAGetArray;
     userO->VecGetArrayRead = VecCUDAGetArrayRead;
     userO->VecRestoreArray = VecCUDARestoreArray;
     userO->VecRestoreArrayRead = VecCUDARestoreArrayRead;
-#endif
+    #endif
   }
 
   ierr = KSPCreate(comm, &ksp); CHKERRQ(ierr);
   {
     PC pc;
     ierr = KSPGetPC(ksp, &pc); CHKERRQ(ierr);
+    ierr = PCSetType(pc, PCNONE); CHKERRQ(ierr);
+    #if PETSC_VERSION_GT(3,13,0)
     if (bpChoice == CEED_BP1 || bpChoice == CEED_BP2) {
       ierr = PCSetType(pc, PCJACOBI); CHKERRQ(ierr);
       ierr = PCJacobiSetType(pc, PC_JACOBI_ROWSUM); CHKERRQ(ierr);
-    } else {
-      ierr = PCSetType(pc, PCNONE); CHKERRQ(ierr);
     }
+    #endif
     ierr = KSPSetType(ksp, KSPCG); CHKERRQ(ierr);
     ierr = KSPSetNormType(ksp, KSP_NORM_NATURAL); CHKERRQ(ierr);
     ierr = KSPSetTolerances(ksp, 1e-10, PETSC_DEFAULT, PETSC_DEFAULT,
