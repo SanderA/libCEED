@@ -528,7 +528,7 @@ int CeedOperatorAssembleLinearDiagonal(CeedOperator op, CeedVector *assembled,
   @ref Advanced
 **/
 int CeedOperatorCreateFDMElementInverse(CeedOperator op, CeedOperator *fdminv,
-    CeedRequest *request) {
+                                        CeedRequest *request) {
   int ierr;
   Ceed ceed = op->ceed;
 
@@ -586,14 +586,14 @@ int CeedOperatorCreateFDMElementInverse(CeedOperator op, CeedOperator *fdminv,
   ierr = CeedFree(&laplace); CeedChk(ierr);
   for (CeedInt i=0; i<P1d; i++)
     for (CeedInt j=0; j<P1d; j++)
-    x2[i+j*P1d] = x[j+i*P1d];
+      x2[i+j*P1d] = x[j+i*P1d];
   ierr = CeedFree(&x); CeedChk(ierr);
 
   // Assemble QFunction
   CeedVector assembled;
   CeedElemRestriction rstr_qf;
   ierr =  CeedOperatorAssembleLinearQFunction(op, &assembled, &rstr_qf,
-                                              request); CeedChk(ierr);
+          request); CeedChk(ierr);
   ierr = CeedElemRestrictionDestroy(&rstr_qf); CeedChk(ierr);
 
   // Calculate element averages
@@ -611,14 +611,14 @@ int CeedOperatorCreateFDMElementInverse(CeedOperator op, CeedOperator *fdminv,
   ierr = CeedCalloc(nelem, &elemavg); CeedChk(ierr);
   for (CeedInt e=0; e<nelem; e++) {
     CeedInt count = 0;
-      for (CeedInt q=0; q<nqpts; q++)
-        for (CeedInt i=0; i<ncomp*ncomp*nfields; i++)
-          if (fabs(assembledarray[e*nelem*nqpts*ncomp*ncomp*nfields +
-                                  i*nqpts + q]) > 1e-15) {
-            elemavg[e] += assembledarray[e*nelem*nqpts*ncomp*ncomp*nfields +
-                                         i*nqpts + q] / qweightsarray[q];
-            count++;
-          }
+    for (CeedInt q=0; q<nqpts; q++)
+      for (CeedInt i=0; i<ncomp*ncomp*nfields; i++)
+        if (fabs(assembledarray[e*nelem*nqpts*ncomp*ncomp*nfields +
+                                                                  i*nqpts + q]) > 1e-15) {
+          elemavg[e] += assembledarray[e*nelem*nqpts*ncomp*ncomp*nfields +
+                                       i*nqpts + q] / qweightsarray[q];
+          count++;
+        }
     if (count)
       elemavg[e] /= count;
   }
@@ -645,7 +645,7 @@ int CeedOperatorCreateFDMElementInverse(CeedOperator op, CeedOperator *fdminv,
             qdataarray[(e*ncomp+c)*nnodes+n] += lambda[i];
           }
         qdataarray[(e*ncomp+c)*nnodes+n] = 1 / (elemavg[e] *
-                                           qdataarray[(e*ncomp+c)*nnodes+n]);
+                                                qdataarray[(e*ncomp+c)*nnodes+n]);
       }
   ierr = CeedFree(&elemavg); CeedChk(ierr);
   ierr = CeedVectorRestoreArray(qdata, &qdataarray); CeedChk(ierr);
@@ -669,7 +669,7 @@ int CeedOperatorCreateFDMElementInverse(CeedOperator op, CeedOperator *fdminv,
   // -- Restriction
   CeedElemRestriction rstr_i;
   ierr = CeedElemRestrictionCreateIdentity(ceed, nelem, nnodes, nnodes*nelem,
-                                           ncomp, &rstr_i); CeedChk(ierr);
+         ncomp, &rstr_i); CeedChk(ierr);
   // -- QFunction
   CeedQFunction mass_qf;
   ierr = CeedQFunctionCreateInteriorByName(ceed, "MassApply", &mass_qf);
@@ -688,7 +688,7 @@ int CeedOperatorCreateFDMElementInverse(CeedOperator op, CeedOperator *fdminv,
   ierr = CeedBasisDestroy(&fdm_basis); CeedChk(ierr);
   ierr = CeedElemRestrictionDestroy(&rstr_i); CeedChk(ierr);
   ierr = CeedQFunctionDestroy(&mass_qf); CeedChk(ierr);
-  
+
   return 0;
 }
 
