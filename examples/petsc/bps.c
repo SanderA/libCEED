@@ -139,11 +139,10 @@ int main(int argc, char **argv) {
   // Check memtype compatibility
   if (!setmemtyperequest)
     memtyperequested = memtypebackend;
-  else
-    if (!petschavecuda && memtyperequested == CEED_MEM_DEVICE)
-      SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_SUP_SYS,
-               "PETSc was not built with CUDA. "
-               "Requested MemType CEED_MEM_DEVICE is not supported.", NULL);
+  else if (!petschavecuda && memtyperequested == CEED_MEM_DEVICE)
+    SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_SUP_SYS,
+             "PETSc was not built with CUDA. "
+             "Requested MemType CEED_MEM_DEVICE is not supported.", NULL);
 
   // Setup DM
   if (read_mesh) {

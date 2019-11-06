@@ -142,11 +142,10 @@ int main(int argc, char **argv) {
   // Check memtype compatibility
   if (!setmemtyperequest)
     memtyperequested = memtypebackend;
-  else
-    if (!petschavecuda && memtyperequested == CEED_MEM_DEVICE)
-      SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_SUP_SYS,
-               "PETSc was not built with CUDA. "
-               "Requested MemType CEED_MEM_DEVICE is not supported.", NULL);
+  else if (!petschavecuda && memtyperequested == CEED_MEM_DEVICE)
+    SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_SUP_SYS,
+             "PETSc was not built with CUDA. "
+             "Requested MemType CEED_MEM_DEVICE is not supported.", NULL);
 
   // Setup DM
   if (read_mesh) {
@@ -211,9 +210,9 @@ int main(int argc, char **argv) {
     CHKERRQ(ierr);
 
     // Create vectors
-  if (memtyperequested == CEED_MEM_DEVICE) {
-    ierr = DMSetVecType(dm[i], VECCUDA); CHKERRQ(ierr);
-  }
+    if (memtyperequested == CEED_MEM_DEVICE) {
+      ierr = DMSetVecType(dm[i], VECCUDA); CHKERRQ(ierr);
+    }
     ierr = DMCreateGlobalVector(dm[i], &X[i]); CHKERRQ(ierr);
     ierr = VecGetLocalSize(X[i], &lsize[i]); CHKERRQ(ierr);
     ierr = VecGetSize(X[i], &gsize[i]); CHKERRQ(ierr);
@@ -448,7 +447,7 @@ int main(int argc, char **argv) {
       userO[i]->VecRestoreArrayRead = VecCUDARestoreArrayRead;
       #endif
       // *INDENT-ON*
-  }
+    }
 
     // Set up diagonal
     const CeedScalar *ceedarray;
